@@ -101,11 +101,11 @@ print("训练集流失率 %.4f / 测试集流失率 %.4f" % (y_train.mean(), y_t
 # ------------------------------------------------------------------
 section("1. 冗余诊断（先查泄漏/冗余，再谈重要性）")
 ok = df["TotalCharges"].notna()
-reg = LinearRegression().fit(
-    df.loc[ok, ["tenure", "MonthlyCharges"]], df.loc[ok, "TotalCharges"]
-)
-r2 = reg.score(df.loc[ok, ["tenure", "MonthlyCharges"]], df.loc[ok, "TotalCharges"])
-print("TotalCharges ~ tenure + MonthlyCharges 的 R² = %.4f" % r2)
+prod = (df.loc[ok, "tenure"] * df.loc[ok, "MonthlyCharges"]).to_frame("tenure_x_monthly")
+reg = LinearRegression().fit(prod, df.loc[ok, "TotalCharges"])
+r2 = reg.score(prod, df.loc[ok, "TotalCharges"])
+ratio = (df.loc[ok, "TotalCharges"] / prod["tenure_x_monthly"].replace(0, np.nan)).median()
+print("TotalCharges ≈ tenure × MonthlyCharges：R² = %.4f，比值中位数 = %.3f" % (r2, ratio))
 print(">>> R² > 0.95 说明 TotalCharges 基本是另两列的确定性组合，"
       "它排到特征重要性第一并不代表业务信息多，反而会稀释 SHAP 解释。")
 
