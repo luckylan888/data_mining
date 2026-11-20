@@ -4,3 +4,5 @@ __pycache__/
 .DS_Store
 catboost_info/
 *.log
+# 报告生成脚本与中间图只在本地保留，仓库仅放最终word/pdf
+report/
