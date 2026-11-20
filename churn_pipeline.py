@@ -37,6 +37,7 @@
 """
 
 import os
+import json
 import warnings
 from pathlib import Path
 
@@ -612,6 +613,20 @@ print(scores.round(4).to_string(index=False))
 scores.to_csv(RESULT_DIR / "model_scores.csv", index=False,
               encoding="utf-8-sig", float_format="%.4f")
 
+# 导出测试集概率与训练信息：报告绘图脚本直接复用，不必重复训练
+pd.DataFrame({"y": y_test_arr, **test_proba}).to_csv(
+    RESULT_DIR / "test_probabilities.csv", index=False,
+    encoding="utf-8-sig", float_format="%.6f")
+pd.Series(thresholds, name="threshold").rename_axis("model").to_csv(
+    RESULT_DIR / "thresholds.csv", encoding="utf-8-sig", float_format="%.4f")
+np.savetxt(RESULT_DIR / "mlp_loss.csv", loss, delimiter=",", header="loss", comments="")
+with open(RESULT_DIR / "training_info.json", "w", encoding="utf-8") as f:
+    json.dump({"mlp_iter": int(mlp.n_iter_),
+               "mlp_loss_start": float(loss[0]),
+               "mlp_loss_end": float(loss[-1]),
+               "best_depth": int(best_depth),
+               "totalcharges_r2": float(r2)}, f, ensure_ascii=False, indent=2)
+
 # 图 6：AUC / PR-AUC 带 95% CI 的横向对比（论文主图风格）
 plot_df = scores[scores["model"] != "基线(全预测不流失)"].sort_values("auc")
 fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.4), sharey=True)
@@ -791,6 +806,8 @@ shap_vals = cat_model.get_feature_importance(
 mean_abs = pd.Series(np.abs(shap_vals).mean(axis=0), index=X_test.columns).sort_values(ascending=False)
 top_feats = mean_abs.head(8).index.tolist()
 print("\nCatBoost 平均 |SHAP| Top8:\n" + mean_abs.head(8).round(4).to_string())
+mean_abs.to_csv(RESULT_DIR / "shap_importance.csv", encoding="utf-8-sig",
+                header=["mean_abs_shap"])
 print(">>> TotalCharges 排进前 8 主要是与 tenure、MonthlyCharges 冗余（R²=0.9991），")
 print(">>> 它反映的是“累计消费/在网时长”的复合信号，不应被解读为独立业务杠杆。")
 

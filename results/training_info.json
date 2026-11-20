@@ -1,0 +1,7 @@
+{
+  "mlp_iter": 402,
+  "mlp_loss_start": 0.5514448895087737,
+  "mlp_loss_end": 0.16044607659162954,
+  "best_depth": 4,
+  "totalcharges_r2": 0.999122983955598
+}
